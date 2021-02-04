@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Home.css';
 import convertFormDataToArray from '../../common/convertFormDataToArray';
 import Input from '../UI/Input/Input';
 import updateFormDataInLocalState from '../../common/updateFormDataInLocalState';
+import { connect } from 'react-redux';
+import { setIsLoggedIn, addProductsFromLS } from '../../store/actions';
+import { withRouter } from 'react-router-dom';
 
-const Home = () => {
+const Home = (props) => {
 
     const initialState = {
         formData:{
@@ -55,6 +58,21 @@ const Home = () => {
 
     const [formValues, setFormValues] = useState(initialState);
 
+    useEffect(() => {
+
+        const isUserLogged = JSON.parse(localStorage.getItem('isUserLoggedIn'));
+        const productsInLS = JSON.parse(localStorage.getItem('products'));
+
+        if(!isUserLogged){
+            props.history.push('/');
+        } else {
+            props.onSetIsLoggedIn();
+            if(productsInLS){
+                props.onAddProductsFromLS(productsInLS);
+            }
+        }
+    }, []);
+
     const inputChangeHandler = (event, id, formData)=>{
         const {updatedFormData,formIsValid}= updateFormDataInLocalState(event,id,formData);
 
@@ -65,41 +83,73 @@ const Home = () => {
         });
     };
 
+    const onUserLogin = (e) =>{ 
+        e.preventDefault();
+        console.log('props while clicking the button are ==>>', props);
+        const {name,password,email} = props.userDetails;
+
+        if(name === formValues.formData.name.value && password === formValues.formData.password.value && 
+            email === formValues.formData.email.value){
+                props.onSetIsLoggedIn();
+                localStorage.setItem('isUserLoggedIn', true);
+                props.history.push('/products');
+            } else {
+                alert('Incorrect details entered');
+            }
+    };
+
+
+    const form = (
+        <form className='login-form'>
+        {convertFormDataToArray(formValues.formData).map(formElement => {
+            const {id} = formElement;
+            const { elementType,
+                    elementConfig,
+                    value,
+                    validation,
+                    valid,
+                    touched
+                } = formElement.config;
+
+            return (
+                <Input
+                key={id}
+                elementType={elementType}
+                elementConfig={elementConfig}
+                value={value}
+                valid={valid}
+                invalid={!valid}
+                touched={touched}
+                shouldValidate={validation}
+                name={id}
+                changed={e => inputChangeHandler(e,id,formValues.formData)}
+                />
+            );
+        })}
+        <button onClick={onUserLogin}>Login</button>
+    </form>
+    )
+
 
     return (
         <div className='Home'>
-            <h3>Login to add or view products!</h3>
-            <form className='login-form'>
-                {convertFormDataToArray(formValues.formData).map(formElement => {
-                    const {id} = formElement;
-                    const { elementType,
-                            elementConfig,
-                            value,
-                            validation,
-                            valid,
-                            touched
-                        } = formElement.config;
-
-                    return (
-                        <Input
-                        key={id}
-                        elementType={elementType}
-                        elementConfig={elementConfig}
-                        value={value}
-                        validation={validation}
-                        valid={valid}
-                        invalid={!valid}
-                        touched={touched}
-                        name={id}
-                        changed={e => inputChangeHandler(e,id,formValues.formData)}
-                        />
-                    );
-                })}
-                <button>Login</button>
-            </form>
-
+            {props.loggedIn ? <h3>You are logged In!</h3> : form }
         </div>
     );
 }
 
-export default Home;
+const mapStateToProps =(state)=> {
+    return {
+        userDetails: state.userDetails,
+        loggedIn: state.loggedIn
+    }
+};
+
+const mapDispatchToProps = dispatch => {
+    return {
+        onSetIsLoggedIn: ()=>{ dispatch( setIsLoggedIn())},
+        onAddProductsFromLS: (updatedProducts)=>{dispatch(addProductsFromLS(updatedProducts))}
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Home));

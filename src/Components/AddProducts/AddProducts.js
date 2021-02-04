@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './AddProducts.css';
 import convertFormDataToArray from '../../common/convertFormDataToArray';
 import Input from '../UI/Input/Input';
 import updateFormDataInLocalState from '../../common/updateFormDataInLocalState';
+import { withRouter } from 'react-router-dom';
+import { connect } from 'react-redux';
+import { addProducts, setIsLoggedIn, addProductsFromLS } from '../../store/actions';
 
-const AddProducts = () => {
+const AddProducts = (props) => {
 
     const initialState = {
         formData:{
@@ -29,7 +32,7 @@ const AddProducts = () => {
                 },
                 value: '',
                 validation: {
-                    required: true,
+                    required: false,
                 },
                 valid: false,
                 touched: false
@@ -44,7 +47,7 @@ const AddProducts = () => {
                 value: '',
                 validation: {
                     required: true,
-                    isEmail: true,
+                    isNumber: true
                 },
                 valid: false,
                 touched: false
@@ -58,7 +61,7 @@ const AddProducts = () => {
                 value: '',
                 validation: {
                     required: true,
-                    isEmail: true,
+                    isNumber: true
                 },
                 valid: false,
                 touched: false
@@ -71,8 +74,7 @@ const AddProducts = () => {
                 },
                 value: '',
                 validation: {
-                    required: true,
-                    isEmail: true,
+                    required: false,
                 },
                 valid: false,
                 touched: false
@@ -82,6 +84,24 @@ const AddProducts = () => {
     };
 
     const [formValues, setFormValues] = useState(initialState);
+    const [userIsLoggedIn, setUserIsLoggedIn] = useState(
+        JSON.parse(localStorage.getItem('isUserLoggedIn'))|| false);
+
+
+    useEffect(() => {
+
+        const isUserLogged = JSON.parse(localStorage.getItem('isUserLoggedIn'));
+        const productsInLS = JSON.parse(localStorage.getItem('products'));
+
+        if(!isUserLogged){
+            props.history.push('/');
+        } else {
+            props.onSetIsLoggedIn();
+            if(productsInLS){
+                props.onAddProductsFromLS(productsInLS);
+            }
+        }
+    }, []);
 
     const inputChangeHandler = (event, id, formData)=>{
         const {updatedFormData,formIsValid}= updateFormDataInLocalState(event,id,formData);
@@ -91,6 +111,39 @@ const AddProducts = () => {
             formData:updatedFormData,
             isValidForm: formIsValid
         });
+    };
+
+    const addProductsHandler =(e) => {   
+        e.preventDefault();
+        const {formData} = formValues;
+        const name = formData.name.value;
+        const description =formData.description.value;
+        const price = formData.price.value;
+        const quantity = formData.quantity.value;
+        const imageUrl = formData.image.value;
+
+        const updatedProduct = {
+            name,
+            description,
+            price: JSON.parse(price),
+            quantity:JSON.parse(quantity),
+            imageUrl
+        };
+        const productsInLS = JSON.parse(localStorage.getItem('products'));
+        if(productsInLS){
+            productsInLS.push(updatedProduct);
+            localStorage.setItem('products', JSON.stringify(productsInLS));
+            props.onAddProductsFromLS(productsInLS);
+
+        } else{
+            const newProducts = [...props.products];
+            newProducts.push(updatedProduct);
+            localStorage.setItem('products', JSON.stringify(newProducts));
+            props.onAddProducts(updatedProduct);
+
+        }
+        
+        props.history.push('/products');
     };
 
     return (
@@ -113,7 +166,7 @@ const AddProducts = () => {
                         elementType={elementType}
                         elementConfig={elementConfig}
                         value={value}
-                        validation={validation}
+                        shouldValidate={validation}
                         valid={valid}
                         invalid={!valid}
                         touched={touched}
@@ -123,10 +176,25 @@ const AddProducts = () => {
                     );
                 })
                 }
-                <button>Save Product</button>
+                <button disabled={!formValues.isValidForm} onClick={addProductsHandler}>Save Product</button>
             </form>
         </div>
     );
+};
+
+const mapStateToProps =(state)=> {
+    return {
+        loggedIn: state.loggedIn,
+        products: state.products
+    };
+};
+
+const mapDispatchToProps = dispatch => {
+    return {
+        onAddProducts: (updatedProduct)=>{ dispatch(addProducts(updatedProduct))},
+        onSetIsLoggedIn: ()=>{ dispatch( setIsLoggedIn())},
+        onAddProductsFromLS: (updatedProducts)=>{dispatch(addProductsFromLS(updatedProducts))}
+    }
 }
 
-export default AddProducts;
+export default connect(mapStateToProps,mapDispatchToProps)(withRouter(AddProducts));

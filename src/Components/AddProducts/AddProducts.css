@@ -27,3 +27,9 @@
     height:3rem;
     margin-top: 1rem;
 }
+
+.add-products-form button:disabled{
+    cursor: not-allowed;
+    background: linear-gradient(to right top, #86c5ba, #77b9c4);
+}
+

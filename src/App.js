@@ -10,16 +10,15 @@ const App = () => {
     return (
         <div className='App'>
             <section className='glass'>
+                <Nav/>
+                
                 <Route path='/' exact>
-                    <Nav/>
                     <Home />
                 </Route>
                 <Route path='/addProducts' exact>
-                    <Nav/>
                     <AddProducts />
                 </Route>
                 <Route path='/products' exact>
-                    <Nav/>
                     <Products />
                 </Route>
             </section>
