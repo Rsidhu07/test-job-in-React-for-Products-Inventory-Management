@@ -85,7 +85,6 @@ const Home = (props) => {
 
     const onUserLogin = (e) =>{ 
         e.preventDefault();
-        console.log('props while clicking the button are ==>>', props);
         const {name,password,email} = props.userDetails;
 
         if(name === formValues.formData.name.value && password === formValues.formData.password.value && 

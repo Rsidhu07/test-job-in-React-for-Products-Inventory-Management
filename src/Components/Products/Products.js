@@ -90,8 +90,6 @@ const Products = (props) => {
             selectedFilter ='quantity'
         }
 
-        console.log('selected option and selected filtered are===>>', selectedOption,selectedFilter);
-
         const sortedProductsBySelectedOption = [...props.products];
         sortedProductsBySelectedOption.sort((a,b)=>{
             return a[selectedFilter]-b[selectedFilter];
