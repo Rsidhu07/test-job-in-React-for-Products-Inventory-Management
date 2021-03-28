@@ -11,7 +11,6 @@ const App = () => {
         <div className='App'>
             <section className='glass'>
                 <Nav/>
-                
                 <Route path='/' exact>
                     <Home />
                 </Route>

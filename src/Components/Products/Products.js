@@ -44,6 +44,7 @@ const Products = (props) => {
         if(input.length < 1){
 
          setIsSearching(false);
+         setFilteredProducts([]);
         }
     };
 
